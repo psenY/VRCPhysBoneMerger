@@ -1,0 +1,24 @@
+{
+    "name": "pseny7.vrc.physbone-merger.Editor",
+    "rootNamespace": "PsenY7.VRCPhysBoneMerger",
+    "references": [
+        "pseny7.vrc.physbone-merger",
+        "VRC.SDKBase",
+        "VRC.SDKBase.Editor",
+        "VRC.SDK3A",
+        "VRC.SDK3A.Editor",
+        "VRC.Dynamics",
+        "VRC.SDK3.Dynamics.PhysBone"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
