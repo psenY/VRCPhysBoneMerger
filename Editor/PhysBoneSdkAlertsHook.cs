@@ -61,7 +61,7 @@ namespace PsenY7.VRCPhysBoneMerger
 
             if (_alertRowElement == null)
             {
-                _alertRowElement = CreateNativeAlertRow();
+                _alertRowElement = CreateUnifiedAlertBanner();
                 if (targetContainer.childCount > 0)
                 {
                     targetContainer.Insert(0, _alertRowElement);
@@ -120,45 +120,39 @@ namespace PsenY7.VRCPhysBoneMerger
             return null;
         }
 
-        private static VisualElement CreateNativeAlertRow()
+        private static VisualElement CreateUnifiedAlertBanner()
         {
-            // 1. Outer Row Container (Exactly matching SDK alert row layout)
-            var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.minHeight = 44;
-            row.style.marginTop = 0;
-            row.style.marginBottom = 4;
-            row.style.marginLeft = 0;
-            row.style.marginRight = 0;
-            row.style.alignItems = Align.Stretch;
+            // Unified Full-width Alert Banner
+            var banner = new VisualElement();
+            banner.style.flexDirection = FlexDirection.Row;
+            banner.style.minHeight = 42;
+            banner.style.marginTop = 2;
+            banner.style.marginBottom = 4;
+            banner.style.marginLeft = 0;
+            banner.style.marginRight = 0;
+            banner.style.alignItems = Align.Center;
+            banner.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 1f);
+            banner.style.borderTopWidth = 1;
+            banner.style.borderBottomWidth = 1;
+            banner.style.borderLeftWidth = 1;
+            banner.style.borderRightWidth = 1;
+            banner.style.borderTopColor = new Color(0.12f, 0.12f, 0.12f, 1f);
+            banner.style.borderBottomColor = new Color(0.12f, 0.12f, 0.12f, 1f);
+            banner.style.borderLeftColor = new Color(0.12f, 0.12f, 0.12f, 1f);
+            banner.style.borderRightColor = new Color(0.12f, 0.12f, 0.12f, 1f);
+            banner.style.borderTopLeftRadius = 3;
+            banner.style.borderTopRightRadius = 3;
+            banner.style.borderBottomLeftRadius = 3;
+            banner.style.borderBottomRightRadius = 3;
+            banner.style.paddingLeft = 10;
+            banner.style.paddingRight = 10;
+            banner.style.paddingTop = 6;
+            banner.style.paddingBottom = 6;
 
-            // 2. Left Text & Icon Box (Matching #2e2e2e background, 1px border, 3px border-radius)
-            var leftBox = new VisualElement();
-            leftBox.style.flexDirection = FlexDirection.Row;
-            leftBox.style.flexGrow = 1;
-            leftBox.style.flexShrink = 1;
-            leftBox.style.alignItems = Align.Center;
-            leftBox.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 1f);
-            leftBox.style.borderTopWidth = 1;
-            leftBox.style.borderBottomWidth = 1;
-            leftBox.style.borderLeftWidth = 1;
-            leftBox.style.borderRightWidth = 1;
-            leftBox.style.borderTopColor = new Color(0.12f, 0.12f, 0.12f, 1f);
-            leftBox.style.borderBottomColor = new Color(0.12f, 0.12f, 0.12f, 1f);
-            leftBox.style.borderLeftColor = new Color(0.12f, 0.12f, 0.12f, 1f);
-            leftBox.style.borderRightColor = new Color(0.12f, 0.12f, 0.12f, 1f);
-            leftBox.style.borderTopLeftRadius = 3;
-            leftBox.style.borderTopRightRadius = 3;
-            leftBox.style.borderBottomLeftRadius = 3;
-            leftBox.style.borderBottomRightRadius = 3;
-            leftBox.style.paddingLeft = 8;
-            leftBox.style.paddingRight = 8;
-            leftBox.style.paddingTop = 4;
-            leftBox.style.paddingBottom = 4;
-            leftBox.style.marginRight = 4;
-            leftBox.style.overflow = Overflow.Hidden;
+            // Click banner to select avatar in Hierarchy
+            banner.RegisterCallback<ClickEvent>(evt => OnSelectButtonClicked());
 
-            // 3. Crisp Blue Info Icon Badge (Native Texture2D, eliminating any missing font glyph issues)
+            // Left Icon Badge
             if (_infoBadgeTexture == null)
             {
                 _infoBadgeTexture = CreateBlueInfoBadge();
@@ -166,52 +160,25 @@ namespace PsenY7.VRCPhysBoneMerger
 
             var iconImage = new Image();
             iconImage.image = _infoBadgeTexture;
-            iconImage.style.width = 30;
-            iconImage.style.height = 30;
-            iconImage.style.minWidth = 30;
-            iconImage.style.minHeight = 30;
-            iconImage.style.marginRight = 8;
+            iconImage.style.width = 28;
+            iconImage.style.height = 28;
+            iconImage.style.minWidth = 28;
+            iconImage.style.minHeight = 28;
+            iconImage.style.marginRight = 10;
             iconImage.style.flexShrink = 0;
-            leftBox.Add(iconImage);
+            banner.Add(iconImage);
 
-            // 4. Message Label (Vertically centered, wrapping properly without overflow)
+            // Message Label
             _alertTextLabel = new Label("PhysBone Auto Merger: Scanning...");
             _alertTextLabel.style.flexGrow = 1;
             _alertTextLabel.style.flexShrink = 1;
             _alertTextLabel.style.whiteSpace = WhiteSpace.Normal;
             _alertTextLabel.style.fontSize = 11;
-            _alertTextLabel.style.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+            _alertTextLabel.style.color = new Color(0.88f, 0.88f, 0.88f, 1f);
             _alertTextLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
-            leftBox.Add(_alertTextLabel);
+            banner.Add(_alertTextLabel);
 
-            row.Add(leftBox);
-
-            // 5. Right Select Button (Matching SDK "Select" button styling & full height)
-            var selectBtn = new Button(OnSelectButtonClicked);
-            selectBtn.text = "Select";
-            selectBtn.style.width = 75;
-            selectBtn.style.minWidth = 75;
-            selectBtn.style.flexShrink = 0;
-            selectBtn.style.backgroundColor = new Color(0.28f, 0.28f, 0.28f, 1f);
-            selectBtn.style.borderTopWidth = 1;
-            selectBtn.style.borderBottomWidth = 1;
-            selectBtn.style.borderLeftWidth = 1;
-            selectBtn.style.borderRightWidth = 1;
-            selectBtn.style.borderTopColor = new Color(0.22f, 0.22f, 0.22f, 1f);
-            selectBtn.style.borderBottomColor = new Color(0.22f, 0.22f, 0.22f, 1f);
-            selectBtn.style.borderLeftColor = new Color(0.22f, 0.22f, 0.22f, 1f);
-            selectBtn.style.borderRightColor = new Color(0.22f, 0.22f, 0.22f, 1f);
-            selectBtn.style.borderTopLeftRadius = 3;
-            selectBtn.style.borderTopRightRadius = 3;
-            selectBtn.style.borderBottomLeftRadius = 3;
-            selectBtn.style.borderBottomRightRadius = 3;
-            selectBtn.style.fontSize = 12;
-            selectBtn.style.color = Color.white;
-            selectBtn.style.alignSelf = Align.Stretch;
-
-            row.Add(selectBtn);
-
-            return row;
+            return banner;
         }
 
         private static Texture2D CreateBlueInfoBadge()
@@ -242,14 +209,13 @@ namespace PsenY7.VRCPhysBoneMerger
                 }
             }
 
-            // Draw 'i' icon (dot + vertical bar)
+            // Draw 'i' icon
             int dotY = (int)(size * 0.69f);
             int barTopY = (int)(size * 0.53f);
             int barBottomY = (int)(size * 0.27f);
             int barWidth = 4;
             int centerX = size / 2;
 
-            // Dot
             for (int y = dotY - 2; y <= dotY + 2; y++)
             {
                 for (int x = centerX - 2; x <= centerX + 2; x++)
@@ -257,7 +223,6 @@ namespace PsenY7.VRCPhysBoneMerger
                     tex.SetPixel(x, y, white);
                 }
             }
-            // Bar
             for (int y = barBottomY; y <= barTopY; y++)
             {
                 for (int x = centerX - barWidth / 2; x < centerX + barWidth / 2; x++)
@@ -305,7 +270,7 @@ namespace PsenY7.VRCPhysBoneMerger
 
             if (PhysBoneLocalization.IsChinese)
             {
-                _alertTextLabel.text = $"PhysBone 动骨自动合并: 当前包含 {stats.CurrentBoneCount} 个动骨。上传构建时将自动合并为 {stats.PredictedBoneCount} 个组件 (消减 {stats.ReducedBoneCount} 个，策略: {activeMerger.Strategy})。";
+                _alertTextLabel.text = $"PhysBone 动骨自动合并: 模型当前包含 {stats.CurrentBoneCount} 个动骨。上传构建时将自动合并为 {stats.PredictedBoneCount} 个组件 (消减 {stats.ReducedBoneCount} 个，策略: {activeMerger.Strategy})。";
             }
             else
             {
