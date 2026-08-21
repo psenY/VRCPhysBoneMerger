@@ -45,11 +45,11 @@ namespace PsenY7.VRCPhysBoneMerger
             {
                 string[] labels = new string[]
                 {
-                    PhysBoneLocalization.Tr("UltraStrict 极限无损 (0.0001 容差 / 100% 绝对相同)", "UltraStrict (0.0001 Tolerance / 100% Identical)"),
-                    PhysBoneLocalization.Tr("Strict 严格零风险 (推荐默认 / 0.001 容差)", "Strict (Recommended Default / 0.001 Tolerance)"),
-                    PhysBoneLocalization.Tr("Balanced 平衡优化 (0.02 容差 / 微调智能融合)", "Balanced (0.02 Tolerance / Smart Blend)"),
-                    PhysBoneLocalization.Tr("Aggressive 激进压缩 (同父节点大范围合并)", "Aggressive (Large Scope Same-Parent Merge)"),
-                    PhysBoneLocalization.Tr("Custom 完全自定义容差", "Custom Tolerance Mode")
+                    PhysBoneLocalization.Tr("UltraStrict 极限无损", "UltraStrict"),
+                    PhysBoneLocalization.Tr("Strict 严格零风险", "Strict (Zero Risk)"),
+                    PhysBoneLocalization.Tr("Balanced 平衡优化", "Balanced"),
+                    PhysBoneLocalization.Tr("Aggressive 激进压缩", "Aggressive"),
+                    PhysBoneLocalization.Tr("Custom 自定义", "Custom")
                 };
 
                 strategyProp.enumValueIndex = EditorGUILayout.Popup(
