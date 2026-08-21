@@ -1,0 +1,25 @@
+{
+  "name": "psenY7 Repository",
+  "id": "com.pseny7.vrc.repository",
+  "url": "https://pseny.github.io/VRCPhysBoneMerger/index.json",
+  "author": "psenY7",
+  "packages": {
+    "pseny7.vrc.physbone-merger": {
+      "versions": {
+        "1.0.0": {
+          "name": "pseny7.vrc.physbone-merger",
+          "displayName": "VRC PhysBone Merger (动骨合并与压缩工具)",
+          "version": "1.0.0",
+          "description": "A high-performance, non-destructive VRChat PhysBone merging and optimization tool. Features zero-risk preset strategies, performance rank preview, collider deduplication, and late build hook integration.",
+          "unity": "2019.4",
+          "url": "https://github.com/psenY/VRCPhysBoneMerger/releases/download/v1.0.0/pseny7.vrc.physbone-merger-1.0.0.zip",
+          "vpmDependencies": {
+            "com.vrchat.avatars": ">=3.4.0"
+          },
+          "legacyFolders": {},
+          "legacyFiles": {}
+        }
+      }
+    }
+  }
+}

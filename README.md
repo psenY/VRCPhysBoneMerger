@@ -29,19 +29,29 @@
 
 ## 🚀 安装方式 (Installation)
 
-### 方式 1：通过 Git URL 安装 (推荐)
-1. 打开 Unity，点击顶部菜单：Window -> Package Manager。
-2. 点击左上角的 + 号，选择 **"Add package from git URL..."**。
+### 方式 1：通过 VCC / ALCOM 一键添加存储库 (强烈推荐 ⭐)
+[![Add to VCC](https://img.shields.io/badge/VCC-Add%20Repository-2ea44f?style=for-the-badge&logo=vrchat)](vcc://vpm/addRepo?url=https%3A%2F%2FpsenY.github.io%2FVRCPhysBoneMerger%2Findex.json)
+
+1. 点击上方绿色按钮或访问 [网页端一键安装页面](https://psenY.github.io/VRCPhysBoneMerger/)，一键导入 VCC / ALCOM 客户端。
+2. 或在 VCC / ALCOM 的设置中手动添加 Repository 源：
+   ```text
+   https://psenY.github.io/VRCPhysBoneMerger/index.json
+   ```
+3. 在模型工程的管理列表中找到 **VRC PhysBone Merger**，点击 **+** 即可安装或升级！
+
+### 方式 2：通过 UPM Git URL 安装
+1. 打开 Unity，点击顶部菜单：`Window` -> `Package Manager`。
+2. 点击左上角的 `+` 号，选择 **"Add package from git URL..."**。
 3. 粘贴仓库地址：
    ```text
    https://github.com/psenY/VRCPhysBoneMerger.git
    ```
 4. 点击 **Add** 即可完成自动安装与后续一键更新。
 
-### 方式 2：通过本地文件夹安装
+### 方式 3：通过本地文件夹安装
 1. 下载或克隆本仓库到本地。
-2. 打开 Unity Package Manager -> 点击 + -> 选择 **"Add package from disk..."**。
-3. 选中本插件根目录下的 package.json 即可。
+2. 打开 Unity `Package Manager` -> 点击 `+` -> 选择 **"Add package from disk..."**。
+3. 选中本插件根目录下的 `package.json` 即可。
 
 ---
 

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>psenY7 VCC Repository</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: #1e293b;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: #38bdf8;
+        }
+        p {
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        .btn {
+            display: inline-block;
+            background: #0ea5e9;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 0.85rem 1.75rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.3);
+        }
+        .btn:hover {
+            background: #0284c7;
+            transform: translateY(-1px);
+        }
+        .url-box {
+            background: #0f172a;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            word-break: break-all;
+            border: 1px solid #334155;
+            text-align: left;
+        }
+        .copy-hint {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>psenY7 VCC / ALCOM 存储库</h1>
+        <p>点击下方按钮一键将 VRC PhysBone Merger (动骨合并与压缩工具) 添加至您的 VRChat Creator Companion (VCC) 或 ALCOM 客户端。</p>
+        
+        <a href="vcc://vpm/addRepo?url=https%3A%2F%2FpsenY.github.io%2FVRCPhysBoneMerger%2Findex.json" class="btn">
+            ? 一键添加至 VCC / ALCOM
+        </a>
+
+        <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">手动添加地址 (Manual URL):</p>
+        <div class="url-box">
+            https://psenY.github.io/VRCPhysBoneMerger/index.json
+        </div>
+        <div class="copy-hint">在 VCC / ALCOM 设置中粘贴此地址即可订阅</div>
+    </div>
+</body>
+</html>
