@@ -26,9 +26,6 @@ namespace PsenY7.VRCPhysBoneMerger
             public int MergedGroupCount;
             public int ReducedBoneCount;
 
-            public int CurrentColliderCount;
-            public int PredictedColliderCount;
-
             public string CurrentRank;
             public string PredictedRank;
         }
@@ -41,7 +38,7 @@ namespace PsenY7.VRCPhysBoneMerger
             var allBones = avatarRoot.GetComponentsInChildren<VRCPhysBone>(true);
             if (allBones == null || allBones.Length < 2) return clusters;
 
-            // Group by parent transform
+            // Group sibling PhysBones by parent transform
             Dictionary<Transform, List<VRCPhysBone>> parentMap = new Dictionary<Transform, List<VRCPhysBone>>();
             for (int i = 0; i < allBones.Length; i++)
             {
@@ -59,7 +56,6 @@ namespace PsenY7.VRCPhysBoneMerger
                 list.Add(bone);
             }
 
-            // Cluster siblings under same parent
             foreach (var kvp in parentMap)
             {
                 var siblings = kvp.Value;
@@ -126,11 +122,6 @@ namespace PsenY7.VRCPhysBoneMerger
         {
             if (a == null || b == null) return false;
 
-            // Basic mode checks
-            if (a.integrationType != b.integrationType) return false;
-            if (a.limitType != b.limitType) return false;
-            if (a.multiChildType != b.multiChildType) return false;
-
             // Physics parameters
             if (Mathf.Abs(a.pull - b.pull) > numTol) return false;
             if (Mathf.Abs(a.spring - b.spring) > numTol) return false;
@@ -138,11 +129,7 @@ namespace PsenY7.VRCPhysBoneMerger
             if (Mathf.Abs(a.gravity - b.gravity) > numTol) return false;
             if (Mathf.Abs(a.gravityFalloff - b.gravityFalloff) > numTol) return false;
             if (Mathf.Abs(a.drag - b.drag) > numTol) return false;
-
-            // Collision settings
             if (Mathf.Abs(a.radius - b.radius) > numTol) return false;
-            if (a.allowCollision != b.allowCollision) return false;
-            if (a.immobileType != b.immobileType) return false;
             if (Mathf.Abs(a.immobile - b.immobile) > numTol) return false;
 
             // Limits
@@ -155,14 +142,29 @@ namespace PsenY7.VRCPhysBoneMerger
             // Curves check
             if (!ignoreCurves)
             {
-                if (!AreCurvesEqual(a.pullCurve, b.pullCurve, curveTol)) return false;
-                if (!AreCurvesEqual(a.springCurve, b.springCurve, curveTol)) return false;
-                if (!AreCurvesEqual(a.stiffnessCurve, b.stiffnessCurve, curveTol)) return false;
-                if (!AreCurvesEqual(a.gravityCurve, b.gravityCurve, curveTol)) return false;
-                if (!AreCurvesEqual(a.dragCurve, b.dragCurve, curveTol)) return false;
+                if (!AreCurvesEqual(GetCurve(a, "pullCurve"), GetCurve(b, "pullCurve"), curveTol)) return false;
+                if (!AreCurvesEqual(GetCurve(a, "springCurve"), GetCurve(b, "springCurve"), curveTol)) return false;
+                if (!AreCurvesEqual(GetCurve(a, "stiffnessCurve"), GetCurve(b, "stiffnessCurve"), curveTol)) return false;
+                if (!AreCurvesEqual(GetCurve(a, "gravityCurve"), GetCurve(b, "gravityCurve"), curveTol)) return false;
+                if (!AreCurvesEqual(GetCurve(a, "dragCurve"), GetCurve(b, "dragCurve"), curveTol)) return false;
             }
 
             return true;
+        }
+
+        private static AnimationCurve GetCurve(VRCPhysBone bone, string fieldName)
+        {
+            if (bone == null) return null;
+            try
+            {
+                FieldInfo field = typeof(VRCPhysBone).GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
+                if (field != null) return field.GetValue(bone) as AnimationCurve;
+
+                PropertyInfo prop = typeof(VRCPhysBone).GetProperty(fieldName, BindingFlags.Public | BindingFlags.Instance);
+                if (prop != null) return prop.GetValue(bone) as AnimationCurve;
+            }
+            catch { }
+            return null;
         }
 
         private static bool AreCurvesEqual(AnimationCurve c1, AnimationCurve c2, float tol)
@@ -194,43 +196,32 @@ namespace PsenY7.VRCPhysBoneMerger
                 var prime = bones[0];
                 if (prime == null) continue;
 
-                // Create container for merged PhysBone
+                // Create container GameObject for merged PhysBone
                 GameObject holder = new GameObject(cluster.SmartName ?? "Merged_PhysBone");
                 if (useUndo) Undo.RegisterCreatedObjectUndo(holder, "Merge PhysBones");
+
                 holder.transform.SetParent(cluster.Parent, false);
+                holder.transform.localPosition = prime.transform.localPosition;
+                holder.transform.localRotation = prime.transform.localRotation;
+                holder.transform.localScale = prime.transform.localScale;
+                holder.transform.SetSiblingIndex(prime.transform.GetSiblingIndex());
 
                 VRCPhysBone merged = useUndo ? Undo.AddComponent<VRCPhysBone>(holder) : holder.AddComponent<VRCPhysBone>();
                 EditorUtility.CopySerialized(prime, merged);
+                merged.rootTransform = null; // Automatically drives all child branches
 
-                // Collect multi-root transforms
-                List<Transform> rootTransforms = new List<Transform>();
+                // Reparent original sibling bone transforms under the new merged container
                 for (int i = 0; i < bones.Count; i++)
                 {
                     var b = bones[i];
-                    if (b == null) continue;
-
-                    if (b.transforms != null && b.transforms.Count > 0)
+                    if (b != null && b.transform != null)
                     {
-                        for (int t = 0; t < b.transforms.Count; t++)
-                        {
-                            if (b.transforms[t] != null && !rootTransforms.Contains(b.transforms[t]))
-                                rootTransforms.Add(b.transforms[t]);
-                        }
-                    }
-                    else if (b.rootTransform != null)
-                    {
-                        if (!rootTransforms.Contains(b.rootTransform)) rootTransforms.Add(b.rootTransform);
-                    }
-                    else
-                    {
-                        if (!rootTransforms.Contains(b.transform)) rootTransforms.Add(b.transform);
+                        if (useUndo) Undo.SetTransformParent(b.transform, holder.transform, "Merge PhysBones");
+                        else b.transform.SetParent(holder.transform, true);
                     }
                 }
 
-                merged.rootTransform = null;
-                merged.transforms = rootTransforms;
-
-                // Deduplicate & aggregate colliders
+                // Deduplicate colliders
                 if (deduplicateColliders)
                 {
                     MergeAndCleanColliders(merged, bones);
@@ -330,7 +321,6 @@ namespace PsenY7.VRCPhysBoneMerger
             string name0 = bones[0].gameObject.name;
             if (bones.Count == 1) return name0 + "_Merged";
 
-            // Find common prefix
             string prefix = name0;
             for (int i = 1; i < bones.Count; i++)
             {
