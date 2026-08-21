@@ -321,10 +321,9 @@ namespace PsenY7.VRCPhysBoneMerger
                     if (prime == null) continue;
 
                     float progress = (float)(c + 1) / clusters.Count;
-                    EditorUtility.DisplayProgressBar(
-                        "VRC PhysBone Merger",
-                        $"⚡ 正在合并 [组 {c + 1}/{clusters.Count}]: \"{cluster.SmartName}\" ({bones.Count} 个动骨)...",
-                        progress);
+                    string stepInfo = $"[组 {c + 1}/{clusters.Count}] 正在合并 \"{cluster.SmartName}\" ({bones.Count} 个动骨)...";
+                    PhysBoneBuildProgressWindow.ShowProgress("VRC PhysBone Merger (非破坏性动骨合并)", stepInfo, progress);
+                    EditorUtility.DisplayProgressBar("VRC PhysBone Merger", $"⚡ {stepInfo}", progress);
 
                     // Create container GameObject for merged PhysBone
                     GameObject holder = new GameObject(cluster.SmartName ?? "Merged_PhysBone");
@@ -383,6 +382,7 @@ namespace PsenY7.VRCPhysBoneMerger
             }
 
             int reducedBones = totalOriginalBones - mergedCount;
+            PhysBoneBuildProgressWindow.Finish(totalOriginalBones, mergedCount);
             logBuilder.AppendLine($"\n🎉 ========== 构建完成：成功合并 {mergedCount} 组 PhysBone 动骨！ ==========");
             logBuilder.AppendLine($"📊 统计总结：共将 {totalOriginalBones} 个原始 PhysBone 压缩为 {mergedCount} 个组件 (总计消减 {reducedBones} 个动骨，性能大幅提升！)");
             Debug.Log(logBuilder.ToString());
