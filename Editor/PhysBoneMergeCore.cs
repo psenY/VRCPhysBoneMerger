@@ -129,26 +129,52 @@ namespace PsenY7.VRCPhysBoneMerger
             if (GetBoolField(left, "isAnimated") != GetBoolField(right, "isAnimated")) return false;
             if (GetStringField(left, "parameter") != GetStringField(right, "parameter")) return false;
 
-            // If aggressive mode, relax physics tolerances
-            if (config.Strategy == PhysBoneAutoMerger.MergeStrategy.Aggressive)
-            {
-                return ComparePanelField(left.pull, right.pull, 0.1f)
-                    && ComparePanelField(left.spring, right.spring, 0.1f)
-                    && ComparePanelField(left.stiffness, right.stiffness, 0.1f)
-                    && ComparePanelField(left.gravity, right.gravity, 0.1f)
-                    && ComparePanelField(left.gravityFalloff, right.gravityFalloff, 0.1f)
-                    && ComparePanelField(left.immobile, right.immobile, 0.1f)
-                    && ComparePanelField(left.maxAngleX, right.maxAngleX, 0.1f)
-                    && ComparePanelField(left.maxAngleZ, right.maxAngleZ, 0.1f)
-                    && ComparePanelField(left.radius, right.radius, 0.1f);
-            }
+            // Determine strategy parameters
+            float numTol;
+            float curveTol;
+            bool ignoreCurves;
+            bool ignoreLimits;
+            bool ignoreEndpoint;
 
-            // Strict / Custom Mode
-            float numTol = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Strict ? 0.001f : config.NumericTolerance;
-            float curveTol = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Strict ? 0.001f : config.CurveTolerance;
-            bool ignoreCurves = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Custom && config.IgnoreCurves;
-            bool ignoreLimits = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Custom && config.IgnoreLimitsRotation;
-            bool ignoreEndpoint = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Custom && config.IgnoreEndpointPosition;
+            switch (config.Strategy)
+            {
+                case PhysBoneAutoMerger.MergeStrategy.UltraStrict:
+                    numTol = 0.0001f;
+                    curveTol = 0.0001f;
+                    ignoreCurves = false;
+                    ignoreLimits = false;
+                    ignoreEndpoint = false;
+                    break;
+                case PhysBoneAutoMerger.MergeStrategy.Strict:
+                    numTol = 0.001f;
+                    curveTol = 0.001f;
+                    ignoreCurves = false;
+                    ignoreLimits = false;
+                    ignoreEndpoint = false;
+                    break;
+                case PhysBoneAutoMerger.MergeStrategy.Balanced:
+                    numTol = 0.02f;
+                    curveTol = 0.01f;
+                    ignoreCurves = false;
+                    ignoreLimits = true;
+                    ignoreEndpoint = true;
+                    break;
+                case PhysBoneAutoMerger.MergeStrategy.Aggressive:
+                    numTol = 0.1f;
+                    curveTol = 0.05f;
+                    ignoreCurves = true;
+                    ignoreLimits = true;
+                    ignoreEndpoint = true;
+                    break;
+                case PhysBoneAutoMerger.MergeStrategy.Custom:
+                default:
+                    numTol = config.NumericTolerance;
+                    curveTol = config.CurveTolerance;
+                    ignoreCurves = config.IgnoreCurves;
+                    ignoreLimits = config.IgnoreLimitsRotation;
+                    ignoreEndpoint = config.IgnoreEndpointPosition;
+                    break;
+            }
 
             // Standard Physics
             if (!ComparePanelField(left.pull, right.pull, numTol)) return false;

@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -51,10 +51,10 @@ namespace PsenY7.VRCPhysBoneMerger
                 Instance._currentInfo = $"🎉 构建完成！共将 {totalOriginal} 个动骨压缩为 {mergedCount} 个组件 (消减 {reduced} 个)";
                 Instance.Repaint();
 
-                // Keep result visible for 1.2 seconds so user can see it
+                // Keep result visible for 5.0 seconds so user can see summary clearly
                 EditorApplication.delayCall += async () =>
                 {
-                    await Task.Delay(1200);
+                    await Task.Delay(5000);
                     if (Instance != null)
                     {
                         Instance.Close();
@@ -79,7 +79,7 @@ namespace PsenY7.VRCPhysBoneMerger
 
             GUILayout.BeginArea(new Rect(16, 12, position.width - 32, position.height - 24));
 
-            // Top Header: Title + Percentage
+            // Top Header: Title + Percentage + Close button
             GUILayout.BeginHorizontal();
             GUIStyle titleStyle = new GUIStyle(EditorStyles.boldLabel)
             {
@@ -95,6 +95,17 @@ namespace PsenY7.VRCPhysBoneMerger
                 normal = { textColor = _isDone ? new Color(0.2f, 0.9f, 0.4f) : Color.white }
             };
             GUILayout.Label($"{Mathf.RoundToInt(_progress * 100)}%", pctStyle);
+
+            if (_isDone)
+            {
+                GUILayout.Space(6);
+                if (GUILayout.Button("✕", GUILayout.Width(24), GUILayout.Height(18)))
+                {
+                    Close();
+                    Instance = null;
+                    return;
+                }
+            }
             GUILayout.EndHorizontal();
 
             GUILayout.Space(6);
