@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -270,11 +270,11 @@ namespace PsenY7.VRCPhysBoneMerger
 
             if (PhysBoneLocalization.IsChinese)
             {
-                _alertTextLabel.text = $"PhysBone 动骨自动合并: 模型当前包含 {stats.CurrentBoneCount} 个动骨。上传构建时将自动合并为 {stats.PredictedBoneCount} 个组件 (消减 {stats.ReducedBoneCount} 个，策略: {activeMerger.Strategy})。";
+                _alertTextLabel.text = $"PhysBone 动骨自动合并: 模型当前包含 {stats.CurrentBoneCount} 个动骨。上传构建时预计将自动合并为约 {stats.PredictedBoneCount} 个组件 (预计消减 {stats.ReducedBoneCount} 个，策略: {activeMerger.Strategy})。";
             }
             else
             {
-                _alertTextLabel.text = $"PhysBone Auto Merger: Avatar has {stats.CurrentBoneCount} PhysBones. Will auto-merge to {stats.PredictedBoneCount} on upload (reducing {stats.ReducedBoneCount} components, Strategy: {activeMerger.Strategy}).";
+                _alertTextLabel.text = $"PhysBone Auto Merger: Avatar has {stats.CurrentBoneCount} PhysBones. Estimated to auto-merge into ~{stats.PredictedBoneCount} components on upload (reducing ~{stats.ReducedBoneCount} components, Strategy: {activeMerger.Strategy}).";
             }
         }
 
