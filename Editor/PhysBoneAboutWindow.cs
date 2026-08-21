@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -6,16 +6,15 @@ namespace PsenY7.VRCPhysBoneMerger
 {
     public class PhysBoneAboutWindow : EditorWindow
     {
-        [MenuItem("Tools/VRC PhysBone Merger/关于与使用指南 (About & Guide)", false, 100)]
+        [MenuItem("Tools/VRC PhysBone Merger", false, 100)]
         public static void Open()
         {
-            var win = GetWindow<PhysBoneAboutWindow>(true, "About VRC PhysBone Merger", true);
+            var win = GetWindow<PhysBoneAboutWindow>(true, "VRC PhysBone Merger", true);
             win.minSize = new Vector2(460, 360);
             win.maxSize = new Vector2(460, 360);
             win.Show();
         }
 
-        [MenuItem("Tools/VRC PhysBone Merger/为选中的 Avatar 添加合并组件 (Add to Selected)", false, 101)]
         public static void AddComponentToSelected()
         {
             var go = Selection.activeGameObject;
