@@ -14,6 +14,7 @@ namespace PsenY7.VRCPhysBoneMerger
         private static EditorWindow _lastPanel = null;
         private static VisualElement _alertRowElement = null;
         private static Label _alertTextLabel = null;
+        private static Texture2D _infoBadgeTexture = null;
         private static double _lastCheckTime = 0;
 
         static PhysBoneSdkAlertsHook()
@@ -29,7 +30,7 @@ namespace PsenY7.VRCPhysBoneMerger
 
         private static void OnEditorUpdate()
         {
-            if (EditorApplication.timeSinceStartup - _lastCheckTime < 0.4) return;
+            if (EditorApplication.timeSinceStartup - _lastCheckTime < 0.3) return;
             _lastCheckTime = EditorApplication.timeSinceStartup;
 
             TryAttachBanner();
@@ -121,20 +122,21 @@ namespace PsenY7.VRCPhysBoneMerger
 
         private static VisualElement CreateNativeAlertRow()
         {
-            // Outer Row Container matching native SDK alert row layout
+            // 1. Outer Row Container (Exactly matching SDK alert row layout)
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
             row.style.minHeight = 44;
-            row.style.marginTop = 2;
-            row.style.marginBottom = 3;
+            row.style.marginTop = 0;
+            row.style.marginBottom = 4;
             row.style.marginLeft = 0;
             row.style.marginRight = 0;
             row.style.alignItems = Align.Stretch;
 
-            // Left Text & Icon Box (Matching #2e2e2e background, 1px border, 3px border-radius)
+            // 2. Left Text & Icon Box (Matching #2e2e2e background, 1px border, 3px border-radius)
             var leftBox = new VisualElement();
             leftBox.style.flexDirection = FlexDirection.Row;
             leftBox.style.flexGrow = 1;
+            leftBox.style.flexShrink = 1;
             leftBox.style.alignItems = Align.Center;
             leftBox.style.backgroundColor = new Color(0.18f, 0.18f, 0.18f, 1f);
             leftBox.style.borderTopWidth = 1;
@@ -154,45 +156,42 @@ namespace PsenY7.VRCPhysBoneMerger
             leftBox.style.paddingTop = 4;
             leftBox.style.paddingBottom = 4;
             leftBox.style.marginRight = 4;
+            leftBox.style.overflow = Overflow.Hidden;
 
-            // Flat Badge Icon (Blue/Cyan Circle with Zap / Info)
-            var iconBox = new VisualElement();
-            iconBox.style.width = 28;
-            iconBox.style.height = 28;
-            iconBox.style.minWidth = 28;
-            iconBox.style.minHeight = 28;
-            iconBox.style.borderTopLeftRadius = 14;
-            iconBox.style.borderTopRightRadius = 14;
-            iconBox.style.borderBottomLeftRadius = 14;
-            iconBox.style.borderBottomRightRadius = 14;
-            iconBox.style.backgroundColor = new Color(0.08f, 0.55f, 0.90f, 1f);
-            iconBox.style.justifyContent = Justify.Center;
-            iconBox.style.alignItems = Align.Center;
-            iconBox.style.marginRight = 8;
+            // 3. Crisp Blue Info Icon Badge (Native Texture2D, eliminating any missing font glyph issues)
+            if (_infoBadgeTexture == null)
+            {
+                _infoBadgeTexture = CreateBlueInfoBadge();
+            }
 
-            var iconLabel = new Label("⚡");
-            iconLabel.style.color = Color.white;
-            iconLabel.style.fontSize = 15;
-            iconLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            iconBox.Add(iconLabel);
-            leftBox.Add(iconBox);
+            var iconImage = new Image();
+            iconImage.image = _infoBadgeTexture;
+            iconImage.style.width = 30;
+            iconImage.style.height = 30;
+            iconImage.style.minWidth = 30;
+            iconImage.style.minHeight = 30;
+            iconImage.style.marginRight = 8;
+            iconImage.style.flexShrink = 0;
+            leftBox.Add(iconImage);
 
-            // Message Label
+            // 4. Message Label (Vertically centered, wrapping properly without overflow)
             _alertTextLabel = new Label("PhysBone Auto Merger: Scanning...");
             _alertTextLabel.style.flexGrow = 1;
+            _alertTextLabel.style.flexShrink = 1;
             _alertTextLabel.style.whiteSpace = WhiteSpace.Normal;
             _alertTextLabel.style.fontSize = 11;
-            _alertTextLabel.style.color = new Color(0.88f, 0.88f, 0.88f, 1f);
+            _alertTextLabel.style.color = new Color(0.85f, 0.85f, 0.85f, 1f);
             _alertTextLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
             leftBox.Add(_alertTextLabel);
 
             row.Add(leftBox);
 
-            // Right Select Button (Matching native SDK "Select" button styling & layout)
+            // 5. Right Select Button (Matching SDK "Select" button styling & full height)
             var selectBtn = new Button(OnSelectButtonClicked);
             selectBtn.text = "Select";
             selectBtn.style.width = 75;
             selectBtn.style.minWidth = 75;
+            selectBtn.style.flexShrink = 0;
             selectBtn.style.backgroundColor = new Color(0.28f, 0.28f, 0.28f, 1f);
             selectBtn.style.borderTopWidth = 1;
             selectBtn.style.borderBottomWidth = 1;
@@ -213,6 +212,62 @@ namespace PsenY7.VRCPhysBoneMerger
             row.Add(selectBtn);
 
             return row;
+        }
+
+        private static Texture2D CreateBlueInfoBadge()
+        {
+            int size = 64;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color transparent = new Color(0, 0, 0, 0);
+            Color blue = new Color(0.08f, 0.58f, 0.92f, 1f);
+            Color white = Color.white;
+
+            float center = size / 2f;
+            float radius = size * 0.44f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(center, center));
+                    if (dist <= radius)
+                    {
+                        float alpha = Mathf.Clamp01(radius - dist + 0.5f);
+                        tex.SetPixel(x, y, new Color(blue.r, blue.g, blue.b, alpha));
+                    }
+                    else
+                    {
+                        tex.SetPixel(x, y, transparent);
+                    }
+                }
+            }
+
+            // Draw 'i' icon (dot + vertical bar)
+            int dotY = (int)(size * 0.69f);
+            int barTopY = (int)(size * 0.53f);
+            int barBottomY = (int)(size * 0.27f);
+            int barWidth = 4;
+            int centerX = size / 2;
+
+            // Dot
+            for (int y = dotY - 2; y <= dotY + 2; y++)
+            {
+                for (int x = centerX - 2; x <= centerX + 2; x++)
+                {
+                    tex.SetPixel(x, y, white);
+                }
+            }
+            // Bar
+            for (int y = barBottomY; y <= barTopY; y++)
+            {
+                for (int x = centerX - barWidth / 2; x < centerX + barWidth / 2; x++)
+                {
+                    tex.SetPixel(x, y, white);
+                }
+            }
+
+            tex.Apply();
+            return tex;
         }
 
         private static void RefreshAlertText()
@@ -250,11 +305,11 @@ namespace PsenY7.VRCPhysBoneMerger
 
             if (PhysBoneLocalization.IsChinese)
             {
-                _alertTextLabel.text = $"PhysBone 动骨合并组件: 当前包含 {stats.CurrentBoneCount} 个动骨，上传时将自动合并为 {stats.PredictedBoneCount} 个组件 (消减 {stats.ReducedBoneCount} 个，策略: {activeMerger.Strategy})。";
+                _alertTextLabel.text = $"PhysBone 动骨自动合并: 当前包含 {stats.CurrentBoneCount} 个动骨。上传构建时将自动合并为 {stats.PredictedBoneCount} 个组件 (消减 {stats.ReducedBoneCount} 个，策略: {activeMerger.Strategy})。";
             }
             else
             {
-                _alertTextLabel.text = $"PhysBone Auto Merger: Avatar has {stats.CurrentBoneCount} PhysBones, will auto-merge to {stats.PredictedBoneCount} on upload (reducing {stats.ReducedBoneCount} components, Strategy: {activeMerger.Strategy}).";
+                _alertTextLabel.text = $"PhysBone Auto Merger: Avatar has {stats.CurrentBoneCount} PhysBones. Will auto-merge to {stats.PredictedBoneCount} on upload (reducing {stats.ReducedBoneCount} components, Strategy: {activeMerger.Strategy}).";
             }
         }
 
