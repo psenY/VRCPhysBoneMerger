@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -128,7 +128,6 @@ namespace PsenY7.VRCPhysBoneMerger
             if (Mathf.Abs(a.stiffness - b.stiffness) > numTol) return false;
             if (Mathf.Abs(a.gravity - b.gravity) > numTol) return false;
             if (Mathf.Abs(a.gravityFalloff - b.gravityFalloff) > numTol) return false;
-            if (Mathf.Abs(a.drag - b.drag) > numTol) return false;
             if (Mathf.Abs(a.radius - b.radius) > numTol) return false;
             if (Mathf.Abs(a.immobile - b.immobile) > numTol) return false;
 
@@ -146,7 +145,6 @@ namespace PsenY7.VRCPhysBoneMerger
                 if (!AreCurvesEqual(GetCurve(a, "springCurve"), GetCurve(b, "springCurve"), curveTol)) return false;
                 if (!AreCurvesEqual(GetCurve(a, "stiffnessCurve"), GetCurve(b, "stiffnessCurve"), curveTol)) return false;
                 if (!AreCurvesEqual(GetCurve(a, "gravityCurve"), GetCurve(b, "gravityCurve"), curveTol)) return false;
-                if (!AreCurvesEqual(GetCurve(a, "dragCurve"), GetCurve(b, "dragCurve"), curveTol)) return false;
             }
 
             return true;
