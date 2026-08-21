@@ -1,8 +1,9 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 using VRC.SDK3.Dynamics.PhysBone.Components;
@@ -17,6 +18,7 @@ namespace PsenY7.VRCPhysBoneMerger
             public List<VRCPhysBone> SiblingBones = new List<VRCPhysBone>();
             public string SmartName;
             public int BoneCount => SiblingBones != null ? SiblingBones.Count : 0;
+            public VRCPhysBone Representative => SiblingBones != null && SiblingBones.Count > 0 ? SiblingBones[0] : null;
         }
 
         public sealed class PerformanceStats
@@ -25,7 +27,6 @@ namespace PsenY7.VRCPhysBoneMerger
             public int PredictedBoneCount;
             public int MergedGroupCount;
             public int ReducedBoneCount;
-
             public string CurrentRank;
             public string PredictedRank;
         }
@@ -44,6 +45,9 @@ namespace PsenY7.VRCPhysBoneMerger
             {
                 var bone = allBones[i];
                 if (bone == null || bone.transform == null) continue;
+
+                // Safety: must have compatible rootTransform (null or pointing to self)
+                if (!HasMergeCompatibleRootTransform(bone)) continue;
 
                 Transform parent = bone.transform.parent;
                 if (parent == null) continue;
@@ -85,18 +89,9 @@ namespace PsenY7.VRCPhysBoneMerger
             List<List<VRCPhysBone>> result = new List<List<VRCPhysBone>>();
             if (bones == null || bones.Count == 0) return result;
 
-            if (config.Strategy == PhysBoneAutoMerger.MergeStrategy.Aggressive)
-            {
-                result.Add(new List<VRCPhysBone>(bones));
-                return result;
-            }
-
-            float numTol = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Strict ? 0.001f : config.NumericTolerance;
-            float curveTol = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Strict ? 0.001f : config.CurveTolerance;
-            bool ignoreCurves = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Custom && config.IgnoreCurves;
-            bool ignoreLimits = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Custom && config.IgnoreLimitsRotation;
-
             List<VRCPhysBone> remaining = new List<VRCPhysBone>(bones);
+            remaining.Sort((a, b) => a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex()));
+
             while (remaining.Count > 0)
             {
                 var primary = remaining[0];
@@ -106,7 +101,7 @@ namespace PsenY7.VRCPhysBoneMerger
                 for (int i = remaining.Count - 1; i >= 0; i--)
                 {
                     var candidate = remaining[i];
-                    if (ArePhysBonesCompatible(primary, candidate, numTol, curveTol, ignoreCurves, ignoreLimits))
+                    if (ArePhysBonesEquivalent(primary, candidate, config))
                     {
                         currentGroup.Add(candidate);
                         remaining.RemoveAt(i);
@@ -118,54 +113,122 @@ namespace PsenY7.VRCPhysBoneMerger
             return result;
         }
 
-        private static bool ArePhysBonesCompatible(VRCPhysBone a, VRCPhysBone b, float numTol, float curveTol, bool ignoreCurves, bool ignoreLimits)
+        private static bool ArePhysBonesEquivalent(VRCPhysBone left, VRCPhysBone right, PhysBoneAutoMerger config)
         {
-            if (a == null || b == null) return false;
+            if (left == null || right == null) return false;
+            if (ReferenceEquals(left, right)) return true;
 
-            // Physics parameters
-            if (Mathf.Abs(a.pull - b.pull) > numTol) return false;
-            if (Mathf.Abs(a.spring - b.spring) > numTol) return false;
-            if (Mathf.Abs(a.stiffness - b.stiffness) > numTol) return false;
-            if (Mathf.Abs(a.gravity - b.gravity) > numTol) return false;
-            if (Mathf.Abs(a.gravityFalloff - b.gravityFalloff) > numTol) return false;
-            if (Mathf.Abs(a.radius - b.radius) > numTol) return false;
-            if (Mathf.Abs(a.immobile - b.immobile) > numTol) return false;
+            // 1. Strict RootTransform Check
+            if (!HasMergeCompatibleRootTransform(left) || !HasMergeCompatibleRootTransform(right)) return false;
 
-            // Limits
+            // 2. Component enabled check
+            if (left.enabled != right.enabled) return false;
+
+            // 3. Animation and FX Parameter Safety Check
+            // If bone is animated or has a parameter driven by FX / Gestures, do not merge unless strictly identical
+            if (GetBoolField(left, "isAnimated") != GetBoolField(right, "isAnimated")) return false;
+            if (GetStringField(left, "parameter") != GetStringField(right, "parameter")) return false;
+
+            // If aggressive mode, relax physics tolerances
+            if (config.Strategy == PhysBoneAutoMerger.MergeStrategy.Aggressive)
+            {
+                return ComparePanelField(left.pull, right.pull, 0.1f)
+                    && ComparePanelField(left.spring, right.spring, 0.1f)
+                    && ComparePanelField(left.stiffness, right.stiffness, 0.1f)
+                    && ComparePanelField(left.gravity, right.gravity, 0.1f)
+                    && ComparePanelField(left.gravityFalloff, right.gravityFalloff, 0.1f)
+                    && ComparePanelField(left.immobile, right.immobile, 0.1f)
+                    && ComparePanelField(left.maxAngleX, right.maxAngleX, 0.1f)
+                    && ComparePanelField(left.maxAngleZ, right.maxAngleZ, 0.1f)
+                    && ComparePanelField(left.radius, right.radius, 0.1f);
+            }
+
+            // Strict / Custom Mode
+            float numTol = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Strict ? 0.001f : config.NumericTolerance;
+            float curveTol = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Strict ? 0.001f : config.CurveTolerance;
+            bool ignoreCurves = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Custom && config.IgnoreCurves;
+            bool ignoreLimits = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Custom && config.IgnoreLimitsRotation;
+            bool ignoreEndpoint = config.Strategy == PhysBoneAutoMerger.MergeStrategy.Custom && config.IgnoreEndpointPosition;
+
+            // Standard Physics
+            if (!ComparePanelField(left.pull, right.pull, numTol)) return false;
+            if (!ComparePanelField(left.spring, right.spring, numTol)) return false;
+            if (!ComparePanelField(left.stiffness, right.stiffness, numTol)) return false;
+            if (!ComparePanelField(left.gravity, right.gravity, numTol)) return false;
+            if (!ComparePanelField(left.gravityFalloff, right.gravityFalloff, numTol)) return false;
+            if (!ComparePanelField(left.immobile, right.immobile, numTol)) return false;
+            if (!ComparePanelField(left.radius, right.radius, numTol)) return false;
+            if (!ComparePanelField(left.maxStretch, right.maxStretch, numTol)) return false;
+
+            // Rotation & Limits
             if (!ignoreLimits)
             {
-                if (Mathf.Abs(a.maxAngleX - b.maxAngleX) > numTol) return false;
-                if (Mathf.Abs(a.maxAngleZ - b.maxAngleZ) > numTol) return false;
+                if (!ComparePanelField(left.maxAngleX, right.maxAngleX, numTol)) return false;
+                if (!ComparePanelField(left.maxAngleZ, right.maxAngleZ, numTol)) return false;
+                if (!CompareVector3(left.limitRotation, right.limitRotation, numTol)) return false;
             }
 
-            // Curves check
+            // Endpoint position
+            if (!ignoreEndpoint)
+            {
+                if (!CompareVector3(left.endpointPosition, right.endpointPosition, numTol)) return false;
+            }
+
+            // Enums / Modes
+            if (left.integrationType != right.integrationType) return false;
+            if (left.immobileType != right.immobileType) return false;
+            if (left.limitType != right.limitType) return false;
+            if (left.multiChildType != right.multiChildType) return false;
+
+            // Filters & Interactions
+            if (!ComparePanelField(left.collisionFilter, right.collisionFilter)) return false;
+            if (!ComparePanelField(left.grabFilter, right.grabFilter)) return false;
+            if (!ComparePanelField(left.poseFilter, right.poseFilter)) return false;
+            if (!ComparePanelField(left.snapToHand, right.snapToHand)) return false;
+
+            // Curves
             if (!ignoreCurves)
             {
-                if (!AreCurvesEqual(GetCurve(a, "pullCurve"), GetCurve(b, "pullCurve"), curveTol)) return false;
-                if (!AreCurvesEqual(GetCurve(a, "springCurve"), GetCurve(b, "springCurve"), curveTol)) return false;
-                if (!AreCurvesEqual(GetCurve(a, "stiffnessCurve"), GetCurve(b, "stiffnessCurve"), curveTol)) return false;
-                if (!AreCurvesEqual(GetCurve(a, "gravityCurve"), GetCurve(b, "gravityCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "pullCurve"), GetCurve(right, "pullCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "springCurve"), GetCurve(right, "springCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "stiffnessCurve"), GetCurve(right, "stiffnessCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "gravityCurve"), GetCurve(right, "gravityCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "gravityFalloffCurve"), GetCurve(right, "gravityFalloffCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "immobileCurve"), GetCurve(right, "immobileCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "radiusCurve"), GetCurve(right, "radiusCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "maxAngleXCurve"), GetCurve(right, "maxAngleXCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "maxAngleZCurve"), GetCurve(right, "maxAngleZCurve"), curveTol)) return false;
+                if (!CompareCurveField(GetCurve(left, "maxStretchCurve"), GetCurve(right, "maxStretchCurve"), curveTol)) return false;
             }
+
+            // Ignore Transforms & Child Structure Check
+            if (!CompareIgnoreTransforms(left, right)) return false;
+            if (!CompareChildHierarchyStructure(left, right)) return false;
 
             return true;
         }
 
-        private static AnimationCurve GetCurve(VRCPhysBone bone, string fieldName)
+        private static bool HasMergeCompatibleRootTransform(VRCPhysBone bone)
         {
-            if (bone == null) return null;
-            try
-            {
-                FieldInfo field = typeof(VRCPhysBone).GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
-                if (field != null) return field.GetValue(bone) as AnimationCurve;
-
-                PropertyInfo prop = typeof(VRCPhysBone).GetProperty(fieldName, BindingFlags.Public | BindingFlags.Instance);
-                if (prop != null) return prop.GetValue(bone) as AnimationCurve;
-            }
-            catch { }
-            return null;
+            return bone != null && (bone.rootTransform == null || bone.rootTransform == bone.transform);
         }
 
-        private static bool AreCurvesEqual(AnimationCurve c1, AnimationCurve c2, float tol)
+        private static bool ComparePanelField<T>(T a, T b)
+        {
+            return EqualityComparer<T>.Default.Equals(a, b);
+        }
+
+        private static bool ComparePanelField(float a, float b, float tol)
+        {
+            return Mathf.Abs(a - b) <= tol;
+        }
+
+        private static bool CompareVector3(Vector3 a, Vector3 b, float tol)
+        {
+            return Mathf.Abs(a.x - b.x) <= tol && Mathf.Abs(a.y - b.y) <= tol && Mathf.Abs(a.z - b.z) <= tol;
+        }
+
+        private static bool CompareCurveField(AnimationCurve c1, AnimationCurve c2, float tol)
         {
             if (c1 == null && c2 == null) return true;
             if (c1 == null || c2 == null) return false;
@@ -180,10 +243,70 @@ namespace PsenY7.VRCPhysBoneMerger
             return true;
         }
 
+        private static bool CompareIgnoreTransforms(VRCPhysBone left, VRCPhysBone right)
+        {
+            var lList = left.ignoreTransforms;
+            var rList = right.ignoreTransforms;
+            if ((lList == null || lList.Count == 0) && (rList == null || rList.Count == 0)) return true;
+            if (lList == null || rList == null) return false;
+            if (lList.Count != rList.Count) return false;
+
+            for (int i = 0; i < lList.Count; i++)
+            {
+                if (lList[i] != rList[i]) return false;
+            }
+            return true;
+        }
+
+        private static bool CompareChildHierarchyStructure(VRCPhysBone left, VRCPhysBone right)
+        {
+            if (left.transform.childCount != right.transform.childCount) return false;
+            return true;
+        }
+
+        private static bool GetBoolField(VRCPhysBone bone, string name)
+        {
+            if (bone == null) return false;
+            try
+            {
+                FieldInfo fi = typeof(VRCPhysBone).GetField(name, BindingFlags.Public | BindingFlags.Instance);
+                if (fi != null) return (bool)fi.GetValue(bone);
+            }
+            catch { }
+            return false;
+        }
+
+        private static string GetStringField(VRCPhysBone bone, string name)
+        {
+            if (bone == null) return null;
+            try
+            {
+                FieldInfo fi = typeof(VRCPhysBone).GetField(name, BindingFlags.Public | BindingFlags.Instance);
+                if (fi != null) return fi.GetValue(bone) as string;
+            }
+            catch { }
+            return null;
+        }
+
+        private static AnimationCurve GetCurve(VRCPhysBone bone, string fieldName)
+        {
+            if (bone == null) return null;
+            try
+            {
+                FieldInfo field = typeof(VRCPhysBone).GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
+                if (field != null) return field.GetValue(bone) as AnimationCurve;
+            }
+            catch { }
+            return null;
+        }
+
         public static int ExecuteMerge(List<MergeCluster> clusters, bool deduplicateColliders, bool useUndo = false)
         {
             if (clusters == null || clusters.Count == 0) return 0;
             int mergedCount = 0;
+
+            StringBuilder logBuilder = new StringBuilder();
+            logBuilder.AppendLine("[VRC PhysBone Merger] ========== ⚡ 动骨非破坏性自动合并构建报告 ==========");
 
             for (int c = 0; c < clusters.Count; c++)
             {
@@ -209,11 +332,13 @@ namespace PsenY7.VRCPhysBoneMerger
                 merged.rootTransform = null; // Automatically drives all child branches
 
                 // Reparent original sibling bone transforms under the new merged container
+                List<string> mergedBoneNames = new List<string>();
                 for (int i = 0; i < bones.Count; i++)
                 {
                     var b = bones[i];
                     if (b != null && b.transform != null)
                     {
+                        mergedBoneNames.Add(b.gameObject.name);
                         if (useUndo) Undo.SetTransformParent(b.transform, holder.transform, "Merge PhysBones");
                         else b.transform.SetParent(holder.transform, true);
                     }
@@ -235,8 +360,15 @@ namespace PsenY7.VRCPhysBoneMerger
                     }
                 }
 
+                logBuilder.AppendLine($"\n📦 [组 {c + 1}/{clusters.Count}] 父节点: \"{cluster.Parent.name}\"");
+                logBuilder.AppendLine($"   ├─ 合并了 {bones.Count} 个动骨: [{string.Join(", ", mergedBoneNames)}]");
+                logBuilder.AppendLine($"   └─ 生成合并容器: \"{holder.name}\" (PhysBone 根驱动)");
+
                 mergedCount++;
             }
+
+            logBuilder.AppendLine($"\n🎉 ========== 构建完成：成功合并 {mergedCount} 组 PhysBone 动骨！ ==========");
+            Debug.Log(logBuilder.ToString());
 
             return mergedCount;
         }
