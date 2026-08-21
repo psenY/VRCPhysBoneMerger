@@ -1,0 +1,64 @@
+﻿# VRC PhysBone Merger (动骨自动合并组件)
+
+[![VRChat](https://img.shields.io/badge/VRChat-Avatar%203.0-blue.svg)](https://vrchat.com)
+[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
+[![VCC Add Repository](https://img.shields.io/badge/VCC-Add%20Repository-2ea44f?style=for-the-badge&logo=vrchat)](https://psenY.github.io/vpm-repository/)
+
+一个专为 VRChat Avatar 3.0 设计的高性能、**纯非破坏性 (Non-Destructive)** 动骨合并与优化工具。支持零风险严格匹配、智能碰撞体去重、实时性能等级预测及上传极晚期自动构建。
+
+---
+
+## 🌟 核心特性 (Key Features)
+
+- 🔒 **非破坏性工作流 (Non-Destructive Workflow)**：
+  - 挂载 `PhysBoneAutoMerger` 组件即可生效，源模型、Prefabs 均保持 100% 原始状态。
+  - 在点击 VRChat 上传或进入 Play 测试时，在内存临时副本中自动合并，上传后自动销毁标记，彻底杜绝 Missing Script 报错。
+- 🛡️ **极晚期执行与全框架兼容 (Order 999999)**：
+  - 在 NDMF、Modular Avatar、VRCFury 和面捕框架（Triturbo FaceTracking 等）完全生成完动画层后才执行合并，杜绝动画参数失效与 NullReferenceException 崩溃。
+- 🎯 **多级策略系统 (Strategy Presets)**：
+  - **Strict (零风险严格策略 - 推荐)**：仅合并物理手感与属性完全一致的同层级动骨，绝不影响动效。
+  - **Aggressive (激进策略)**：同父节点动骨批量合并，大幅减少动骨总数。
+  - **Custom (自定义策略)**：支持自由调节数值容差、曲线容差、忽略旋转等。
+- 📊 **性能等级实时预览 (Performance Rank Preview)**：
+  - 实时分析模型当前与预测的动骨数量，直观展示 Very Poor -> Poor / Medium / Good 变化。
+- 🧹 **碰撞体智能去重与冗余清理 (Collider Deduplication & Cleanup)**：
+  - 自动去重合并后动骨列表中的重复碰撞体，智能清理被破坏或未生效的冗余引用。
+- 🌐 **原生中英双语无缝切换 (Bilingual UI)**：
+  - 支持在 Inspector 面板一键切换简体中文与英文。
+
+---
+
+## 🚀 安装方式 (Installation)
+
+### 方式 1：通过 VCC / ALCOM 一键添加 (强烈推荐 ⭐)
+[![Add to VCC](https://img.shields.io/badge/VCC-Add%20Repository-2ea44f?style=for-the-badge&logo=vrchat)](https://psenY.github.io/vpm-repository/)
+
+1. 点击上方绿色按钮进入 [一键安装页面](https://psenY.github.io/vpm-repository/)，一键导入 VCC / ALCOM 客户端。
+2. 或在 VCC / ALCOM 的设置中手动添加 Repository 源：
+   ```text
+   https://psenY.github.io/vpm-repository/index.json
+   ```
+3. 在模型工程的管理列表中找到 **VRC PhysBone Merger**，点击 **+** 即可安装或升级！
+
+### 方式 2：通过 UPM Git URL 安装
+1. 打开 Unity，点击顶部菜单：`Window` -> `Package Manager`。
+2. 点击左上角的 `+` 号，选择 **"Add package from git URL..."**。
+3. 粘贴仓库地址：
+   ```text
+   https://github.com/psenY/VRCPhysBoneMerger.git
+   ```
+4. 点击 **Add** 即可完成自动安装与后续一键更新。
+
+---
+
+## 📖 使用指南 (Usage)
+
+1. 选中场景中的 Avatar 根节点。
+2. 点击 Inspector 下方的 `Add Component` -> 搜索并添加 `PhysBone Auto Merger (动骨自动合并组件)`。
+3. 在策略下拉框中选择 **Strict (严格策略)** 或自定义策略。
+4. 正常点击 VRChat SDK 的 **Build & Publish** 或进入 **Play 模式**，插件将自动完成合并，源文件完好无损！
+
+---
+
+## 📄 开源许可 (License)
+本项目采用 [GNU General Public License v3.0 (GPL-3.0)](LICENSE) 开源。
