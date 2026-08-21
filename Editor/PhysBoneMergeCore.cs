@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -304,70 +304,87 @@ namespace PsenY7.VRCPhysBoneMerger
         {
             if (clusters == null || clusters.Count == 0) return 0;
             int mergedCount = 0;
+            int totalOriginalBones = 0;
 
             StringBuilder logBuilder = new StringBuilder();
             logBuilder.AppendLine("[VRC PhysBone Merger] ========== ⚡ 动骨非破坏性自动合并构建报告 ==========");
 
-            for (int c = 0; c < clusters.Count; c++)
+            try
             {
-                var cluster = clusters[c];
-                if (cluster == null || cluster.SiblingBones == null || cluster.SiblingBones.Count < 2) continue;
-
-                var bones = cluster.SiblingBones;
-                var prime = bones[0];
-                if (prime == null) continue;
-
-                // Create container GameObject for merged PhysBone
-                GameObject holder = new GameObject(cluster.SmartName ?? "Merged_PhysBone");
-                if (useUndo) Undo.RegisterCreatedObjectUndo(holder, "Merge PhysBones");
-
-                holder.transform.SetParent(cluster.Parent, false);
-                holder.transform.localPosition = prime.transform.localPosition;
-                holder.transform.localRotation = prime.transform.localRotation;
-                holder.transform.localScale = prime.transform.localScale;
-                holder.transform.SetSiblingIndex(prime.transform.GetSiblingIndex());
-
-                VRCPhysBone merged = useUndo ? Undo.AddComponent<VRCPhysBone>(holder) : holder.AddComponent<VRCPhysBone>();
-                EditorUtility.CopySerialized(prime, merged);
-                merged.rootTransform = null; // Automatically drives all child branches
-
-                // Reparent original sibling bone transforms under the new merged container
-                List<string> mergedBoneNames = new List<string>();
-                for (int i = 0; i < bones.Count; i++)
+                for (int c = 0; c < clusters.Count; c++)
                 {
-                    var b = bones[i];
-                    if (b != null && b.transform != null)
+                    var cluster = clusters[c];
+                    if (cluster == null || cluster.SiblingBones == null || cluster.SiblingBones.Count < 2) continue;
+
+                    var bones = cluster.SiblingBones;
+                    var prime = bones[0];
+                    if (prime == null) continue;
+
+                    float progress = (float)(c + 1) / clusters.Count;
+                    EditorUtility.DisplayProgressBar(
+                        "VRC PhysBone Merger",
+                        $"⚡ 正在合并 [组 {c + 1}/{clusters.Count}]: \"{cluster.SmartName}\" ({bones.Count} 个动骨)...",
+                        progress);
+
+                    // Create container GameObject for merged PhysBone
+                    GameObject holder = new GameObject(cluster.SmartName ?? "Merged_PhysBone");
+                    if (useUndo) Undo.RegisterCreatedObjectUndo(holder, "Merge PhysBones");
+
+                    holder.transform.SetParent(cluster.Parent, false);
+                    holder.transform.localPosition = prime.transform.localPosition;
+                    holder.transform.localRotation = prime.transform.localRotation;
+                    holder.transform.localScale = prime.transform.localScale;
+                    holder.transform.SetSiblingIndex(prime.transform.GetSiblingIndex());
+
+                    VRCPhysBone merged = useUndo ? Undo.AddComponent<VRCPhysBone>(holder) : holder.AddComponent<VRCPhysBone>();
+                    EditorUtility.CopySerialized(prime, merged);
+                    merged.rootTransform = null; // Automatically drives all child branches
+
+                    // Reparent original sibling bone transforms under the new merged container
+                    List<string> mergedBoneNames = new List<string>();
+                    for (int i = 0; i < bones.Count; i++)
                     {
-                        mergedBoneNames.Add(b.gameObject.name);
-                        if (useUndo) Undo.SetTransformParent(b.transform, holder.transform, "Merge PhysBones");
-                        else b.transform.SetParent(holder.transform, true);
+                        var b = bones[i];
+                        if (b != null && b.transform != null)
+                        {
+                            mergedBoneNames.Add(b.gameObject.name);
+                            if (useUndo) Undo.SetTransformParent(b.transform, holder.transform, "Merge PhysBones");
+                            else b.transform.SetParent(holder.transform, true);
+                        }
                     }
-                }
 
-                // Deduplicate colliders
-                if (deduplicateColliders)
-                {
-                    MergeAndCleanColliders(merged, bones);
-                }
-
-                // Destroy original PhysBone components
-                for (int i = 0; i < bones.Count; i++)
-                {
-                    if (bones[i] != null)
+                    // Deduplicate colliders
+                    if (deduplicateColliders)
                     {
-                        if (useUndo) Undo.DestroyObjectImmediate(bones[i]);
-                        else UnityEngine.Object.DestroyImmediate(bones[i]);
+                        MergeAndCleanColliders(merged, bones);
                     }
+
+                    // Destroy original PhysBone components
+                    for (int i = 0; i < bones.Count; i++)
+                    {
+                        if (bones[i] != null)
+                        {
+                            if (useUndo) Undo.DestroyObjectImmediate(bones[i]);
+                            else UnityEngine.Object.DestroyImmediate(bones[i]);
+                        }
+                    }
+
+                    totalOriginalBones += bones.Count;
+                    logBuilder.AppendLine($"\n📦 [组 {c + 1}/{clusters.Count}] 父节点: \"{cluster.Parent.name}\"");
+                    logBuilder.AppendLine($"   ├─ 合并了 {bones.Count} 个动骨: [{string.Join(", ", mergedBoneNames)}]");
+                    logBuilder.AppendLine($"   └─ 生成合并容器: \"{holder.name}\" (PhysBone 根驱动)");
+
+                    mergedCount++;
                 }
-
-                logBuilder.AppendLine($"\n📦 [组 {c + 1}/{clusters.Count}] 父节点: \"{cluster.Parent.name}\"");
-                logBuilder.AppendLine($"   ├─ 合并了 {bones.Count} 个动骨: [{string.Join(", ", mergedBoneNames)}]");
-                logBuilder.AppendLine($"   └─ 生成合并容器: \"{holder.name}\" (PhysBone 根驱动)");
-
-                mergedCount++;
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
             }
 
+            int reducedBones = totalOriginalBones - mergedCount;
             logBuilder.AppendLine($"\n🎉 ========== 构建完成：成功合并 {mergedCount} 组 PhysBone 动骨！ ==========");
+            logBuilder.AppendLine($"📊 统计总结：共将 {totalOriginalBones} 个原始 PhysBone 压缩为 {mergedCount} 个组件 (总计消减 {reducedBones} 个动骨，性能大幅提升！)");
             Debug.Log(logBuilder.ToString());
 
             return mergedCount;
