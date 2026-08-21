@@ -43,5 +43,56 @@ namespace PsenY7.VRCPhysBoneMerger
             return false;
         }
     }
+
+    internal static class PhysBonePackageInfo
+    {
+        private static string _cachedVersion = null;
+
+        public static string Version
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_cachedVersion)) return _cachedVersion;
+
+                try
+                {
+                    var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(PhysBoneAutoMerger).Assembly);
+                    if (info != null && !string.IsNullOrEmpty(info.version))
+                    {
+                        _cachedVersion = "v" + info.version;
+                        return _cachedVersion;
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    string[] candidates = new string[]
+                    {
+                        "Packages/pseny7.vrc.physbone-merger/package.json",
+                        "Assets/pseny7.vrc.physbone-merger/package.json"
+                    };
+
+                    foreach (var path in candidates)
+                    {
+                        if (System.IO.File.Exists(path))
+                        {
+                            string json = System.IO.File.ReadAllText(path);
+                            var match = System.Text.RegularExpressions.Regex.Match(json, "\"version\"\\s*:\\s*\"([^\"]+)\"");
+                            if (match.Success)
+                            {
+                                _cachedVersion = "v" + match.Groups[1].Value;
+                                return _cachedVersion;
+                            }
+                        }
+                    }
+                }
+                catch { }
+
+                _cachedVersion = "v1.1.0";
+                return _cachedVersion;
+            }
+        }
+    }
 }
 #endif

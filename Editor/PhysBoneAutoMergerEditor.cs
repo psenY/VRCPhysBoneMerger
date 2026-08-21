@@ -20,9 +20,9 @@ namespace PsenY7.VRCPhysBoneMerger
             EditorGUILayout.Space(6);
             EditorGUILayout.HelpBox(
                 PhysBoneLocalization.Tr(
-                    "🛡️ 非破坏性自动合并模式已就绪\n\n" +
+                    $"🛡️ 非破坏性动骨合并 ({PhysBonePackageInfo.Version}) 已就绪\n\n" +
                     "无需生成备份，也不修改源 Prefab！点击 VRChat 上传或进入 Play 测试时，将在内存临时克隆体中自动合并并优化 PhysBone，原模型 100% 保持完好。",
-                    "🛡️ Non-Destructive Auto Merge Ready\n\n" +
+                    $"🛡️ Non-Destructive PhysBone Merger ({PhysBonePackageInfo.Version}) Ready\n\n" +
                     "No manual backups or prefab edits needed! When building/uploading to VRChat or entering Play Mode, PhysBones will be automatically merged on temporary in-memory clone."),
                 MessageType.Info);
 

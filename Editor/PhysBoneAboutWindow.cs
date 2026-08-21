@@ -56,7 +56,7 @@ namespace PsenY7.VRCPhysBoneMerger
             EditorGUILayout.BeginVertical(GUI.skin.box);
             GUILayout.Label("⚡ VRC PhysBone Merger", EditorStyles.boldLabel);
             GUILayout.Label(PhysBoneLocalization.Tr("专为 VRChat 设计的高性能、非破坏性动骨合并与优化工具", "High-performance non-destructive VRChat PhysBone merging & optimization tool"), EditorStyles.miniLabel);
-            GUILayout.Label(PhysBoneLocalization.Tr("版本: v1.0.7  |  作者: psenY7  |  协议: GPL-3.0", "Version: v1.0.7  |  Author: psenY7  |  License: GPL-3.0"), EditorStyles.miniLabel);
+            GUILayout.Label(PhysBoneLocalization.Tr($"版本: {PhysBonePackageInfo.Version}  |  作者: psenY7  |  协议: GPL-3.0", $"Version: {PhysBonePackageInfo.Version}  |  Author: psenY7  |  License: GPL-3.0"), EditorStyles.miniLabel);
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.Space(8);
