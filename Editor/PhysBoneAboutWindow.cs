@@ -6,19 +6,13 @@ namespace PsenY7.VRCPhysBoneMerger
 {
     public class PhysBoneAboutWindow : EditorWindow
     {
-        [MenuItem("Tools/VRC PhysBone Merger/⚡ 打开主面板与工具说明 (Open Window)", false, 1)]
+        [MenuItem("Tools/VRC PhysBone Merger", false, 100)]
         public static void Open()
         {
             var win = GetWindow<PhysBoneAboutWindow>(true, "VRC PhysBone Merger", true);
             win.minSize = new Vector2(460, 360);
             win.maxSize = new Vector2(460, 360);
             win.Show();
-        }
-
-        [MenuItem("Tools/VRC PhysBone Merger/➕ 为当前选中模型添加合并组件 (Add to Selected)", false, 2)]
-        public static void AddComponentToSelectedMenu()
-        {
-            AddComponentToSelected();
         }
 
         public static void AddComponentToSelected()

@@ -47,17 +47,9 @@ namespace PsenY7.VRCPhysBoneMerger
             }
         }
 
-        [MenuItem("Tools/VRC PhysBone Merger/🏷️ Hierarchy 动骨数量显示 (开关)", false, 50)]
         public static void ToggleHierarchyBadges()
         {
             IsEnabled = !IsEnabled;
-        }
-
-        [MenuItem("Tools/VRC PhysBone Merger/🏷️ Hierarchy 动骨数量显示 (开关)", true)]
-        public static bool ToggleHierarchyBadgesValidate()
-        {
-            Menu.SetChecked("Tools/VRC PhysBone Merger/🏷️ Hierarchy 动骨数量显示 (开关)", IsEnabled);
-            return true;
         }
 
         public static void MarkCacheDirty()
