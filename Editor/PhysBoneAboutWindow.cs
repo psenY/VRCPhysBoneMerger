@@ -84,6 +84,18 @@ namespace PsenY7.VRCPhysBoneMerger
 
             EditorGUILayout.Space(6);
 
+            // Hierarchy Badges Toggle
+            bool showBadges = PhysBoneHierarchyOverlay.IsEnabled;
+            bool newShowBadges = EditorGUILayout.ToggleLeft(
+                PhysBoneLocalization.Tr(" 🏷️ 在 Hierarchy 层级窗口显示动骨数量徽章", " 🏷️ Show PhysBone Count Badges in Hierarchy"),
+                showBadges);
+            if (newShowBadges != showBadges)
+            {
+                PhysBoneHierarchyOverlay.IsEnabled = newShowBadges;
+            }
+
+            EditorGUILayout.Space(6);
+
             // External Links
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(PhysBoneLocalization.Tr("🌐 GitHub 开源仓库", "🌐 GitHub Repository"), GUILayout.Height(26)))

@@ -1,5 +1,9 @@
-﻿*.zip
+*.zip
+*.zip.meta
 *.unitypackage
+*.unitypackage.meta
 .DS_Store
 Thumbs.db
 *.tmp
+LICENSE.meta
+license.meta

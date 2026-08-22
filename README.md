@@ -32,6 +32,8 @@
   - 实时分析模型当前与预测的动骨数量，直观展示 Very Poor -> Poor / Medium / Good 变化。
 - 🧹 **碰撞体智能去重与冗余清理 (Collider Deduplication & Cleanup)**：
   - 自动去重合并后动骨列表中的重复碰撞体，智能清理被破坏或未生效的冗余引用。
+- 🏷️ **Hierarchy 视图动骨数量实时显示 (Hierarchy PhysBone Badges)**：
+  - 在 Unity Hierarchy 层级面板中直接为每个物件（头发、衣服、饰品、骨骼分支等）标注动骨数量徽章（如 `PB: 8` / `PB`），一眼掌握各个组件与子层级的动骨分布，支持随时一键开关。
 - 🌐 **原生中英双语无缝切换 (Bilingual UI)**：
   - 支持在 Inspector 面板一键切换简体中文与英文。
 

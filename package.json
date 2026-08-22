@@ -1,8 +1,8 @@
-﻿{
+{
   "name": "pseny7.vrc.physbone-merger",
   "displayName": "VRC PhysBone Merger (动骨自动合并组件)",
-  "version": "1.1.6",
-  "description": "A high-performance, non-destructive VRChat PhysBone merging and optimization tool. Features zero-risk preset strategies, performance rank preview, collider deduplication, and late build hook integration.",
+  "version": "1.2.0",
+  "description": "A high-performance, non-destructive VRChat PhysBone merging and optimization tool. Features zero-risk preset strategies, performance rank preview, collider deduplication, hierarchy count badges, and late build hook integration.",
   "unity": "2019.4",
   "author": {
     "name": "psenY7"

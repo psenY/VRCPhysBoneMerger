@@ -82,6 +82,16 @@ namespace PsenY7.VRCPhysBoneMerger
 
             serializedObject.ApplyModifiedProperties();
 
+            EditorGUILayout.Space(4);
+            bool showBadges = PhysBoneHierarchyOverlay.IsEnabled;
+            bool newShowBadges = EditorGUILayout.ToggleLeft(
+                PhysBoneLocalization.Tr(" 🏷️ 在 Hierarchy 层级窗口显示动骨数量徽章", " 🏷️ Show PhysBone Count Badges in Hierarchy"),
+                showBadges);
+            if (newShowBadges != showBadges)
+            {
+                PhysBoneHierarchyOverlay.IsEnabled = newShowBadges;
+            }
+
             // Real-time Performance Prediction Dashboard
             if (targetScript != null && targetScript.gameObject != null)
             {
